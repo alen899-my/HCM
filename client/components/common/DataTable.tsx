@@ -310,8 +310,10 @@ export function DataTable<T>({
                   <TableRow
                     key={key}
                     className={cn(
-                      "border-b border-border/60 transition-colors hover:bg-muted/40 dark:border-border/80 dark:hover:bg-muted/20",
-                      selected && "bg-primary/5 hover:bg-primary/5 dark:bg-primary/10 dark:hover:bg-primary/10"
+                      "border-b border-border/60 transition-colors hover:bg-primary/10 dark:border-border/80 dark:hover:bg-primary/20",
+                      (idx + startRow) % 2 === 0 && "bg-muted/25 dark:bg-muted/15",
+                      selected &&
+                        "bg-primary/15 hover:bg-primary/15 dark:bg-primary/30 dark:hover:bg-primary/30"
                     )}
                   >
                     {checkboxColumn && (

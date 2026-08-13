@@ -43,6 +43,13 @@ export const RESOURCE_ENDPOINTS = {
   CREATE: "/resources/",
 } as const;
 
+// ─── RBAC Permission Endpoints ────────────────────────────────────────────────
+export const PERMISSION_ENDPOINTS = {
+  LIST:   "/permissions/",
+  DETAIL: (id: string) => `/permissions/${id}/`,
+  CREATE: "/permissions/",
+} as const;
+
 // ─── Local Storage / Cookie Keys ─────────────────────────────────────────────
 export const TOKEN_KEYS = {
   ACCESS:  "hsm_access_token",

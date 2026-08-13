@@ -44,12 +44,20 @@ export interface FormModalProps<T extends FieldValues> {
   description?: string;
   schema: z.ZodType<T>;
   defaultValues: DefaultValues<T>;
-  onSubmit: (values: T) => Promise<void> | void;
+  onSubmit: (values: T, addMore?: boolean) => Promise<void> | void;
   submitLabel?: string;
+  /** Secondary submit button rendered before the primary one (e.g. "Add More"). */
+  submitExtra?: { label: string };
   loading?: boolean;
   size?: "sm" | "md" | "lg" | "xl";
   /** Generic server-side error banner (e.g. failed request). */
   error?: string | null;
+  /**
+   * When this value changes the form is reset to the latest defaultValues
+   * while staying open — used for "add another" flows (e.g. keep the
+   * selected resource when creating multiple permissions).
+   */
+  resetKey?: number | string;
   children: (form: UseFormReturn<T>) => React.ReactNode;
 }
 
@@ -62,12 +70,15 @@ export function FormModal<T extends FieldValues>({
   defaultValues,
   onSubmit,
   submitLabel = "Save",
+  submitExtra,
   loading = false,
   size = "md",
   error,
+  resetKey,
   children,
 }: FormModalProps<T>) {
   const defaultsRef = useRef(defaultValues);
+  const submitModeRef = useRef<"default" | "extra">("default");
 
   useEffect(() => {
     defaultsRef.current = defaultValues;
@@ -88,8 +99,17 @@ export function FormModal<T extends FieldValues>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // "Add another" flow: reset to the latest defaultValues on demand without
+  // closing the modal (e.g. keep the resource when creating more permissions).
+  useEffect(() => {
+    if (resetKey !== undefined) form.reset(defaultsRef.current as never);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetKey]);
+
   const handleSubmit = form.handleSubmit(async (values) => {
-    await onSubmit(values);
+    const mode = submitModeRef.current;
+    submitModeRef.current = "default";
+    await onSubmit(values, mode === "extra");
   });
 
   return (
@@ -107,7 +127,27 @@ export function FormModal<T extends FieldValues>({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button type="submit" form="hsm-form-modal" disabled={loading}>
+          {submitExtra && (
+            <Button
+              variant="outline"
+              type="submit"
+              form="hsm-form-modal"
+              disabled={loading}
+              onClick={() => {
+                submitModeRef.current = "extra";
+              }}
+            >
+              {submitExtra.label}
+            </Button>
+          )}
+          <Button
+            type="submit"
+            form="hsm-form-modal"
+            disabled={loading}
+            onClick={() => {
+              submitModeRef.current = "default";
+            }}
+          >
             {loading && (
               <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
             )}
