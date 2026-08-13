@@ -1,0 +1,37 @@
+# Hospital Management System (HSM) — Server Run Commands
+# Backend: Django 5 (DRF + JWT + Neon PostgreSQL)
+# Project root: D:\New Projects\HSM
+
+# ─────────────────────────────────────────────────────────────
+# FIRST TIME SETUP
+# ─────────────────────────────────────────────────────────────
+server\.venv\Scripts\Activate.ps1          # activate venv (PowerShell)
+cd server
+pip install -r requirements.txt            # install Python dependencies
+python manage.py migrate                   # apply DB migrations (Neon)
+python manage.py createsuperuser           # create admin user (optional)
+
+# ─────────────────────────────────────────────────────────────
+# START THE SERVER (venv active, inside server\)
+# ─────────────────────────────────────────────────────────────
+python manage.py runserver                 # dev server → http://localhost:8000
+
+# Admin:    http://localhost:8000/admin/
+# API root: http://localhost:8000/api/v1/
+
+# ─────────────────────────────────────────────────────────────
+# OTHER USEFUL COMMANDS
+# ─────────────────────────────────────────────────────────────
+python manage.py runserver 0.0.0.0:8000    # expose on network
+python manage.py makemigrations            # generate migrations
+python manage.py migrate                   # apply migrations
+python manage.py shell                     # Django REPL
+python manage.py dbshell                   # psql shell on Neon DB
+pytest                                     # run all tests
+ruff check .                               # lint Python code
+black .                                    # format Python code
+
+# ─────────────────────────────────────────────────────────────
+# FRONTEND (separate terminal, from client\)
+# ─────────────────────────────────────────────────────────────
+npm run dev                                # → http://localhost:3000

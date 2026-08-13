@@ -1,0 +1,171 @@
+# Hospital Management System (HSM) — Product Requirements Document
+# =============================================================================
+# Version   : 1.0.0
+# Date      : 2026-08-12
+# Status    : APPROVED — In Progress
+# =============================================================================
+
+## 1. Overview
+
+A legacy-grade, full-stack Hospital Management System built with:
+  - Frontend  : Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Shadcn/UI
+  - Backend   : Python 3.12 · Django 5.x · Django REST Framework · SimpleJWT
+  - Database  : Neon PostgreSQL (psycopg3 driver, SSL required)
+  - Auth      : JWT (access + refresh tokens via httpOnly cookies or localStorage)
+  - API Style : RESTful JSON under /api/v1/
+
+## 2. Goals
+
+  G1. Industry-grade, feature-based folder structure for both frontend and backend
+  G2. Scalable monorepo layout (client/ + server/ under HSM/)
+  G3. Neon PostgreSQL connection from Day 1 — migrations run, DB verified
+  G4. Axios API client wired on frontend with JWT interceptor
+  G5. README-driven setup — any developer clones and is running in < 10 minutes
+
+## 3. Non-Goals (Current Phase)
+
+  - WebSocket / real-time features
+  - File upload (X-ray, prescriptions) — deferred
+  - Multi-tenant SaaS — single hospital for now
+  - Production deployment / CI-CD pipeline
+
+## 4. User Roles (Planned)
+
+  superadmin | admin | doctor | nurse | receptionist | patient | pharmacist | lab_technician
+
+## 5. Feature Modules
+
+  Module 1  — Authentication      (login, register, JWT refresh, logout)
+  Module 2  — Patients            (registration, profile, history)
+  Module 3  — Doctors             (profiles, specializations, schedules)
+  Module 4  — Appointments        (booking, calendar, status management)
+  Module 5  — Wards               (beds, admissions, discharges)
+  Module 6  — Pharmacy            (drug inventory, prescriptions, dispensing)
+  Module 7  — Laboratory          (test orders, results, reporting)
+  Module 8  — Billing             (invoices, payments, receipts)
+  Module 9  — Reports             (dashboard analytics, revenue, occupancy)
+
+## 6. Backend Architecture
+
+  server/
+  ├── manage.py
+  ├── requirements.txt
+  ├── requirements-dev.txt
+  ├── .env                        # secrets — NEVER commit
+  ├── .env.example                # template — commit this
+  ├── pytest.ini
+  ├── setup.cfg                   # black / ruff / isort config
+  │
+  ├── config/                     # Django project settings package
+  │   ├── __init__.py
+  │   ├── settings/
+  │   │   ├── __init__.py
+  │   │   ├── base.py             # shared (DB, INSTALLED_APPS, DRF, JWT)
+  │   │   ├── development.py      # DEBUG=True, loose CORS
+  │   │   └── production.py       # security headers, HTTPS only
+  │   ├── urls.py                 # root → /api/v1/
+  │   ├── wsgi.py
+  │   └── asgi.py
+  │
+  └── apps/
+      ├── core/                   # base models, mixins, exceptions
+      ├── authentication/         # CustomUser, JWT views
+      ├── patients/
+      ├── doctors/
+      ├── appointments/
+      ├── wards/
+      ├── pharmacy/
+      ├── laboratory/
+      ├── billing/
+      └── reports/
+
+  Each app owns:
+    models.py · serializers.py · views.py · urls.py · admin.py · filters.py · tests/
+
+## 7. Frontend Architecture
+
+  client/
+  ├── app/
+  │   ├── (auth)/                 # login, register, forgot-password
+  │   └── (dashboard)/            # authenticated shell + all feature pages
+  │
+  ├── features/                   # feature slices (mirrors backend apps)
+  │   └── <feature>/
+  │       ├── api.ts              # axios calls
+  │       ├── hooks.ts            # react-query hooks
+  │       ├── store.ts            # zustand slice
+  │       ├── types.ts
+  │       └── components/
+  │
+  ├── components/                 # global reusable UI
+  │   ├── ui/                     # shadcn primitives
+  │   ├── layout/                 # Sidebar, Topbar, DashboardShell
+  │   └── shared/                 # DataTable, PageHeader, StatCard
+  │
+  ├── lib/
+  │   ├── api-client.ts           # Axios base instance + JWT interceptor
+  │   ├── auth.ts                 # token helpers
+  │   ├── constants.ts            # API URL, route paths
+  │   ├── utils.ts                # cn(), formatDate()
+  │   └── validations/            # Zod schemas
+  │
+  ├── hooks/                      # global custom hooks
+  ├── store/                      # Zustand root store
+  └── types/                      # global TypeScript types
+
+## 8. API Contract
+
+  Base URL : /api/v1/
+
+  Standard Response Envelope:
+  {
+    "success": true,
+    "data":    <object | array>,
+    "message": "OK",
+    "errors":  null,
+    "meta":    { "page": 1, "total": 100 }   // paginated responses only
+  }
+
+  Endpoints (initial):
+    POST   /api/v1/auth/login/
+    POST   /api/v1/auth/refresh/
+    POST   /api/v1/auth/logout/
+    GET    /api/v1/patients/
+    POST   /api/v1/patients/
+    GET    /api/v1/patients/{id}/
+    ...    (each module follows same REST convention)
+
+## 9. Database
+
+  Provider : Neon PostgreSQL
+  DSN      : postgresql://neondb_owner:***@ep-wandering-union-az81w59x-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+  Driver   : psycopg (v3) — NOT psycopg2
+  SSL      : required (sslmode=require + channel_binding=require)
+
+## 10. Development Conventions
+
+  - PEP8 enforced via ruff + black (line length 88)
+  - isort for import ordering
+  - All apps registered with 'apps.<name>' in INSTALLED_APPS
+  - Migrations committed to version control
+  - Frontend: ESLint + Prettier (already configured)
+  - API versioning: URL-based (/api/v1/)
+  - All timestamps: UTC, stored as DateTimeField with auto_now / auto_now_add
+  - Soft delete pattern on core entities (patients, doctors, appointments)
+
+## 11. Open Questions (Answer Before Feature Work Begins)
+
+  Q1. JWT storage — httpOnly cookies (recommended) or localStorage?
+  Q2. File uploads — local storage or S3-compatible (Cloudflare R2, AWS S3)?
+  Q3. Multi-branch support needed eventually?
+  Q4. SMS/Email notifications for appointments?
+
+## 12. Milestones
+
+  M0  — Scaffold + DB connection + README           [CURRENT]
+  M1  — Auth module (CustomUser, JWT, login UI)
+  M2  — Patients + Doctors modules
+  M3  — Appointments + scheduling UI
+  M4  — Wards + Pharmacy + Lab
+  M5  — Billing + Reports dashboard
+  M6  — Role-based access control across all modules
