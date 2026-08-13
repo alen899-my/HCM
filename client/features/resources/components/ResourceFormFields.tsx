@@ -2,23 +2,28 @@
 
 // features/resources/components/ResourceFormFields.tsx
 // ─────────────────────────────────────────────────────────────────────────────
-// Form fields used by BOTH the create and edit Resource modals.
-// Floating-label inputs (placeholder → label animation) with Zod validation.
+// Resource create/edit form fields — clean, standard design:
+// label above field, consistent h-9 inputs, red inline Zod errors,
+// Code auto-generates from Name (slug), Parent is a searchable select,
+// Description has a live 500-char counter, Active is a smooth toggle.
 // Receives the react-hook-form instance from FormModal.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Controller, useWatch, type UseFormReturn } from "react-hook-form";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
+import type { ResourceFormValues } from "@/lib/validations/resource.schema";
+import type { Resource } from "../types";
 
 /** Slugifies a resource name into a stable code: "Patient Management" → "patient-management". */
 const toCode = (value: string) =>
   value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-import { FloatingInput, FloatingTextarea } from "@/components/common/FloatingInput";
-import { SearchableSelect } from "@/components/common/SearchableSelect";
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
-import type { ResourceFormValues } from "@/lib/validations/resource.schema";
-import type { Resource } from "../types";
+
+const inputClass =
+  "h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm text-foreground transition-colors outline-none placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 disabled:cursor-not-allowed disabled:opacity-50";
 
 interface ResourceFormFieldsProps {
   form: UseFormReturn<ResourceFormValues>;
@@ -44,31 +49,53 @@ export function ResourceFormFields({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const descriptionLength = useWatch({ control, name: "description" })?.length ?? 0;
+  const isActive = useWatch({ control, name: "is_active" });
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* ── Name — floating label + Zod error ─────────────────────────── */}
-      <FloatingInput
-        id="resource-name"
-        label="Resource Name"
-        required
-        error={errors.name?.message}
-        {...register("name")}
-        onChange={(event) => {
-          const value = event.target.value;
-          form.setValue("name", value);
-          if (!form.getValues("code")) {
-            form.setValue("code", toCode(value));
-          }
-        }}
-      />
+    <div className="flex flex-col gap-5">
+      {/* ── Name + Code — side by side on wider screens ───────────────── */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor="resource-name">
+            Resource Name
+            <span className="text-destructive" aria-hidden>
+              *
+            </span>
+          </FieldLabel>
+          <Input
+            id="resource-name"
+            placeholder="e.g. Patient Management"
+            autoComplete="off"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "resource-name-error" : undefined}
+            className={inputClass}
+            {...register("name")}
+            onChange={(event) => {
+              const value = event.target.value;
+              form.setValue("name", value);
+              if (!form.getValues("code")) {
+                form.setValue("code", toCode(value));
+              }
+            }}
+          />
+          {errors.name && (
+            <p id="resource-name-error" role="alert" className="text-xs font-medium text-destructive">
+              {errors.name.message}
+            </p>
+          )}
+        </Field>
 
-      {/* ── Code — auto-generated from Name (slug), no error text ──────── */}
-      <FloatingInput
-        id="resource-code"
-        label="Code"
-        {...register("code")}
-      />
+        <Field>
+          <FieldLabel htmlFor="resource-code">Code</FieldLabel>
+          <Input
+            id="resource-code"
+            placeholder="Auto-generated from name"
+            autoComplete="off"
+            className={inputClass}
+            {...register("code")}
+          />
+        </Field>
+      </div>
 
       {/* ── Parent — searchable select ───────────────────────────────── */}
       <Field>
@@ -99,48 +126,62 @@ export function ResourceFormFields({
         {errors.parent && <p className="text-xs font-medium text-destructive">{errors.parent.message}</p>}
       </Field>
 
-      {/* ── Description — floating label textarea + live char counter ── */}
-      <div className="flex flex-col gap-1">
-        <FloatingTextarea
+      {/* ── Description — textarea + live char counter ───────────────── */}
+      <Field>
+        <div className="flex w-full items-center justify-between">
+          <FieldLabel htmlFor="resource-description">Description</FieldLabel>
+          <span
+            className={cn(
+              "text-xs tabular-nums",
+              errors.description ? "font-medium text-destructive" : "text-muted-foreground"
+            )}
+          >
+            {descriptionLength}/500
+          </span>
+        </div>
+        <textarea
           id="resource-description"
-          label="Description"
           rows={3}
           maxLength={500}
-          error={errors.description?.message}
+          placeholder="What does this resource control?"
+          aria-invalid={!!errors.description}
+          aria-describedby={errors.description ? "resource-description-error" : undefined}
+          className={cn(
+            inputClass,
+            "min-h-24 resize-y py-2"
+          )}
           {...register("description")}
         />
-        <p
-          className={cn(
-            "text-right text-xs tabular-nums",
-            errors.description ? "text-destructive" : "text-muted-foreground"
-          )}
-        >
-          {descriptionLength}/500
-        </p>
-      </div>
+        {errors.description && (
+          <p id="resource-description-error" role="alert" className="text-xs font-medium text-destructive">
+            {errors.description.message}
+          </p>
+        )}
+      </Field>
 
-      {/* ── Active ────────────────────────────────────────────────────── */}
+      {/* ── Active — smooth toggle switch ────────────────────────────── */}
       <Field>
         <div className="flex items-center gap-3">
           <Controller
             control={control}
             name="is_active"
             render={({ field }) => (
-              <Checkbox
+              <Switch
                 id="resource-active"
-                className="size-5 rounded-[6px]"
                 checked={field.value}
                 onCheckedChange={field.onChange}
+                aria-label="Active status"
               />
             )}
           />
           <FieldLabel htmlFor="resource-active" className="mb-0 text-sm font-medium">
-            Active
+            {isActive ? (
+              <span className="text-emerald-700 dark:text-emerald-400">Active</span>
+            ) : (
+              <span className="text-destructive">Inactive</span>
+            )}
           </FieldLabel>
         </div>
-        <FieldDescription>
-          Inactive resources are hidden from permission assignment screens.
-        </FieldDescription>
       </Field>
     </div>
   );

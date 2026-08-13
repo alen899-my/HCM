@@ -22,7 +22,7 @@ export function FilterBar({ open, children, className }: FilterBarProps) {
     <div
       id="hsm-filter-bar"
       className={cn(
-        "flex w-full flex-col gap-3 border-b border-border/60 pb-3 sm:flex-row sm:flex-wrap sm:items-end",
+        "flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end",
         className
       )}
     >

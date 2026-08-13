@@ -30,8 +30,8 @@ export default function DashboardLayout({
           <AppHeader />
         </div>
 
-        {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto w-full p-4 md:p-6 bg-background">
+        {/* Scrollable Content Container — full-bleed, no page padding */}
+        <div className="flex-1 overflow-y-auto w-full bg-background">
           {children}
         </div>
       </SidebarInset>

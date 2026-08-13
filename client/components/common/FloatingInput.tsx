@@ -24,19 +24,20 @@
 
 import { cn } from "@/lib/utils";
 
-// Input is h-12 (48px) inside a wrapper with a 20px spacer above (pt-5).
-// Wrapper top → input vertical center = 20 + 24 = 44px = top-11.
-const labelRest = "top-11 -translate-y-1/2 text-sm";
+// Input is h-9 (36px) inside a wrapper with a 20px spacer above (pt-5),
+// so the floated label keeps clear space above the field.
+// Wrapper top → input vertical center = 20 + 18 = 38px = top-[2.375rem].
+const labelRest = "top-[2.375rem] -translate-y-1/2 text-[15px]";
 
 // Floated state — label sits ABOVE the input, in the reserved spacer.
 const labelFloat =
-  "group-focus-within:top-0.5 group-focus-within:-translate-y-0 group-focus-within:text-[11px] group-focus-within:font-medium group-focus-within:text-primary peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:-translate-y-0 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-medium";
+  "group-focus-within:top-0 group-focus-within:-translate-y-0 group-focus-within:text-xs group-focus-within:font-semibold group-focus-within:text-primary peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:-translate-y-0 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:font-semibold";
 
 const labelError =
   "text-destructive group-focus-within:text-destructive peer-[:not(:placeholder-shown)]:text-destructive";
 
 const inputBase =
-  "peer h-12 w-full rounded-lg border border-input bg-transparent px-3.5 text-sm text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground/60 group-focus-within:border-ring group-focus-within:ring-3 group-focus-within:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50";
+  "peer h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground/60 group-focus-within:border-ring group-focus-within:ring-3 group-focus-within:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50";
 
 const inputError =
   "border-destructive group-focus-within:border-destructive group-focus-within:ring-destructive/20 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
@@ -114,8 +115,8 @@ export function FloatingTextarea({
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
           className={cn(
-            // min-h-24 (96px) → vertical center = 20 (spacer) + 48 = 68px = top-[4.25rem]
-            "peer min-h-24 w-full rounded-lg border border-input bg-transparent px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground/60 group-focus-within:border-ring group-focus-within:ring-3 group-focus-within:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 resize-y",
+            // min-h-20 (80px) → vertical center = 20 (spacer) + 40 = 60px = top-[3.75rem]
+            "peer min-h-20 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm text-foreground outline-none transition-colors duration-200 placeholder:text-muted-foreground/60 group-focus-within:border-ring group-focus-within:ring-3 group-focus-within:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 resize-y",
             error && inputError
           )}
           {...props}
@@ -123,8 +124,8 @@ export function FloatingTextarea({
         <label
           htmlFor={id}
           className={cn(
-            "pointer-events-none absolute left-3.5 leading-none text-muted-foreground transition-all duration-200 ease-out",
-            "top-[4.25rem] -translate-y-1/2 text-sm",
+            "pointer-events-none absolute left-3 leading-none text-muted-foreground transition-all duration-200 ease-out",
+            "top-[3.75rem] -translate-y-1/2 text-[15px]",
             labelFloat,
             error && labelError
           )}

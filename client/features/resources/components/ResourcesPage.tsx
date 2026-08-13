@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useDeferredValue, useMemo, useState, type ChangeEvent } from "react";
-import { PlusIcon, SearchIcon } from "lucide-react";
+import { PlusIcon, RotateCcwIcon, SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageLayout } from "@/components/common/PageLayout";
@@ -25,6 +25,7 @@ import {
 import { useResources, useCreateResource, useUpdateResource, useDeleteResource } from "../hooks";
 import { useResourceSelectionStore } from "../store";
 import type { Resource } from "../types";
+import type { DataTableSort } from "@/components/common/DataTable";
 import type { ResourceFormValues } from "@/lib/validations/resource.schema";
 import { ResourcesTable } from "./ResourcesTable";
 import { ResourceFormModal } from "./ResourceFormModal";
@@ -38,7 +39,16 @@ export function ResourcesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [searchInput, setSearchInput] = useState("");
   const [status, setStatus] = useState<StatusFilter>("");
+  const [sort, setSort] = useState<DataTableSort | null>(null);
   const deferredSearch = useDeferredValue(searchInput.trim());
+
+  const ORDER_FIELDS: Record<string, string> = {
+    name: "name",
+    code: "code",
+    parent_code: "parent_code",
+    is_active: "is_active",
+    created_at: "created_at",
+  };
 
   const params = useMemo(
     () => ({
@@ -46,9 +56,11 @@ export function ResourcesPage() {
       page_size: pageSize,
       search: deferredSearch || undefined,
       is_active: status || undefined,
-      ordering: "name",
+      ordering: sort
+        ? `${sort.direction === "desc" ? "-" : ""}${ORDER_FIELDS[sort.key] ?? "name"}`
+        : "name",
     }),
-    [page, pageSize, deferredSearch, status]
+    [page, pageSize, deferredSearch, status, sort]
   );
 
   const { data, total, loading, error: listError, refetch } = useResources(params);
@@ -168,6 +180,23 @@ export function ResourcesPage() {
               <SelectItem value="false">Inactive</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* ── Reset filters — shown when anything is active ────────────── */}
+          {activeFilterCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchInput("");
+                setStatus("");
+                setPage(1);
+              }}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcwIcon />
+              Reset filters
+            </Button>
+          )}
         </FilterBar>
 
         {selectedIds.length > 0 && (
@@ -198,6 +227,11 @@ export function ResourcesPage() {
           }}
           selectedKeys={selectedIds}
           onSelectedKeysChange={setSelectedIds}
+          sort={sort}
+          onSortChange={(nextSort) => {
+            setSort(nextSort);
+            setPage(1);
+          }}
           onEdit={openEdit}
           onView={(r) => setViewing(r)}
           onDelete={(r) => setDeleting(r)}
