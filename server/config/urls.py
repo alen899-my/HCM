@@ -27,6 +27,7 @@ api_v1_patterns = [
     path("reports/",      include("apps.reports.urls")),
     path("resources/",    include("apps.resources.urls")),
     path("permissions/",  include("apps.permissions.urls")),
+    path("roles/",        include("apps.roles.urls")),
 ]
 
 urlpatterns = [
